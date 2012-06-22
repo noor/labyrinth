@@ -1,0 +1,191 @@
+<!DOCTYPE html>
+  <html lang="en" dir="ltr">
+  <head>
+    <meta charset="UTF-8" />
+    <title>Maze Generator &amp; Solver</title>
+    <style type="text/css">
+      html, address, blockquote,
+      body, dd, dl, dt, fieldset,
+      form, frame, frameset, noframes, noscript
+      center, dir, hr, menu, select, button,
+      pre, input, textarea  { font:13px Verdana; color:#000000 }
+      body          { text-align:center; margin:0px }
+      a            { }
+      a:hover          { }
+      :link, :visited      { text-decoration:none }
+      
+      h1, h2, h3, h4      { margin:0px; padding:0px }
+      h1            { font-family:"Trebuchet MS"; font-size:24px }
+      h2            { font-size:10px; font-weight:normal; letter-spacing:1px; padding:5px 10px; }
+      form          { padding:0px; margin:0px }
+      fieldset        { padding:10px; margin:0px; }
+      legend          { padding-bottom:5px }
+      label          { line-height:17px; width:90px; display:block; float:left; clear:left }
+      button          { margin:0px; float:right }
+      .fields          { float:left; width:235px }
+      
+      #container        { /*width:770px;*/ margin:20px auto; text-align:left }
+      #left          { float:left; width:315px; padding:0px 15px; border-right:1px solid #CCCCCC; }
+      #right          { float:left; width:300px; padding:0px 15px; }
+      #title          { background-color:#F2F2F2; border:1px solid #CCCCCC; padding:10px; margin-bottom:0px }
+      
+      
+      .cell {
+        float:left; font-size:10px; line-height:10px; width:10px; height:10px; text-align:center; cursor:pointer;
+      }
+      .wrong {
+        background: rgb(150,220,255);
+      }
+      .correct {
+        background: rgb(160,240,200);
+      }
+    </style>
+  </head>
+  <body>
+    <div id="container">
+    <div id="left">
+      <div id="title">
+        <h1>A JavaScript Maze Generator &amp; Solver</h1>
+      </div>
+      <h2>by Noor Alhiraki</h2>
+      
+      <form>
+        <fieldset>
+        <legend>Generation Options&nbsp;</legend>
+        <div class="fields">
+          <div>
+            <label>Maze Width:</label>
+            <select name="mazeW" id="mazeW">
+              <option value="10" selected="selected">10</option>
+              <option value="20">20</option>
+              <option value="30">30</option>
+              <option value="40">40</option>
+              <option value="50">50</option>
+              <option value="60">60</option>
+              <option value="70">70</option>
+            </select>
+          </div>
+          <div>
+            <label>Maze Height:</label>
+            <select name="mazeH" id="mazeH">
+              <option value="10" selected="selected">10</option>
+              <option value="20">20</option>
+              <option value="30">30</option>
+              <option value="40">40</option>
+              <option value="50">50</option>
+              <option value="60">60</option>
+              <option value="70">70</option>
+            </select>
+          </div>
+          <div>
+            <label>Cell Size:</label>
+            <select name="cellSize" id="cellSize">
+              <option value="10" selected="selected">10</option>
+              <option value="12">12</option>
+              <option value="14">14</option>
+              <option value="16">16</option>
+              <option value="18">18</option>
+              <option value="20">20</option>
+            </select>
+          </div>
+        </div>
+        <input type="button" id="generate" value="Build" />
+        </fieldset>
+        
+        <fieldset>
+        <legend>Solving Options&nbsp;</legend>
+        <div class="fields">
+          <div>
+            <label>Algorithm:</label>
+            <select name="algorithm" id="algorithm">
+              <option value="bfs" selected="selected">Breadth First Search</option>
+              <option value="dfs">Depth First Search</option>
+              <option value="gbfs">Greedy Search</option>
+              <option value="astar">A*</option>
+            </select>
+          </div>
+          <div>
+            <label>Start Cell:</label>
+            <input name="init" id="init" size="5" maxlength="100" type="text" value="" disabled="disabled" />
+            <span>(Left Click)</span>
+          </div>
+          <div>
+            <label>End Cell:</label>
+            <input name="goal" id="goal" size="5" maxlength="100" type="text" value="" disabled="disabled" />
+            <span>(Right Click)</span>
+          </div>
+        </div>
+        <input type="button" id="solve" value="Solve" />
+        </fieldset>
+        
+        <fieldset>
+        <legend>Solution&nbsp;</legend>
+        <div class="fields" id="solution">
+          <div>
+            <label>Execution:</label>
+            <div id="time"></div>
+          </div>
+          <div>
+            <label>Expanded:</label>
+            <div id="expanded"></div>
+          </div>
+          <div>
+            <label>Actions:</label>
+          </div>
+          <div id="actions"></div>
+        </div>
+        <input type="button" id="clear" value="Clear" />
+        </fieldset>
+        
+      </form>
+      
+    </div>
+    <div id="right">
+      <div id="maze"></div>
+    </div>
+  </div>
+  
+  <script type="text/javascript" src="http://ajax.googleapis.com/ajax/libs/prototype/1.7.0.0/prototype.js"></script>
+  <script type="text/javascript" src="http://coffeescript.org/extras/coffee-script.js"></script>
+  <script type="text/coffeescript" src="http://raw.github.com/noor/Labyrinth/master/ai.coffee"></script>
+  <script type="text/coffeescript" src="http://raw.github.com/noor/Labyrinth/master/maze.coffee"></script>
+  <script type="text/coffeescript">
+    $('maze').oncontextmenu = ->
+      false
+    
+    $('maze').onmousedown = (e) ->
+      e = e or window.event
+      obj = e.target ? e.srcElement
+      rightClick = e.which is 3 or e.button is 2
+      leftClick = e.which is 1 or e.button is 1
+      problem.setInitState obj.x, obj.y  if leftClick
+      problem.setGoalState obj.x, obj.y  if rightClick
+    
+    (generateMaze = ->
+      window.problem = new Maze 'maze', {
+        width: $('mazeW').value
+        height: $('mazeH').value
+        start:
+          x: 1
+        cellSize: $('cellSize').value
+      }
+      $('init').value = problem.start.x + ', ' + problem.start.y
+      $('goal').value = problem.end.x + ', ' + problem.end.y
+      problem.clearSolution()
+    )()
+    
+    $('generate').onclick = ->
+      generateMaze()
+    
+    $('solve').onclick = ->
+      problem.solve $('algorithm').value
+    
+    $('clear').onclick = ->
+      problem.clearSolution()
+    
+    $('algorithm').onchange = ->
+      problem.clearSolution()
+  </script>
+  
+  </body>
+</html>
